@@ -132,7 +132,7 @@ export default function App() {
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className="flex overflow-x-auto justify-start min-h-[70vh] max-w-full z-10 gap-4" // Added gap to manage spacing
+            className="flex overflow-x-auto justify-center min-h-[70vh] max-w-full" // Added gap to manage spacing
           >
             {columnsOrder.map((colId, index) => {
               const columnData = data[colId];
@@ -150,11 +150,10 @@ export default function App() {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="flex flex-col p-3 mx-2 bg-gray-700 rounded-md min-w-[280px] max-w-[320px] shadow-lg"
+                      className="flex flex-col p-3 mx-2 bg-gray-700 rounded-md min-w-[320px] max-w-[320px] shadow-lg"
                       style={{
                         ...provided.draggableProps.style,
                         position: "relative",
-                        zIndex: 10,
                       }}
                     >
                       <div
