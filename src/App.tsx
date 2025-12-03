@@ -1,180 +1,109 @@
-import { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import Column from "./components/column";
-import type { DropResult } from "react-beautiful-dnd";
-import type { AllTasksMap, ColumnsMap } from "./types";
-
-// Static data for all tasks (Typed to prevent 'any' index error)
-const allTasks: AllTasksMap = {
-  "task-1": { id: "task-1", title: "Review UI/UX sketches" },
-  "task-2": { id: "task-2", title: "Setup Firebase integration" },
-  "task-3": { id: "task-3", title: "Implement Auth Flow" },
-  "task-4": { id: "task-4", title: "Write unit tests for drag logic" },
-  "task-5": { id: "task-5", title: "Documentation update for API" },
-  "task-6": { id: "task-6", title: "Fix production bug related to billing" },
-  "task-7": { id: "task-7", title: "Brainstorm Q3 features" },
-  "task-8": { id: "task-8", title: "Refactor old service layer" },
-};
-
-const initialColumnOrder = ["column-1", "column-2", "column-3"];
-
-const initialColData: ColumnsMap = {
-  "column-1": {
-    id: "column-1",
-    title: "To Do",
-    tasksOrder: ["task-1", "task-2", "task-3"],
-  },
-  "column-2": {
-    id: "column-2",
-    title: "In Progress",
-    tasksOrder: ["task-4", "task-5"],
-  },
-  "column-3": {
-    id: "column-3",
-    title: "Done",
-    tasksOrder: ["task-6", "task-7", "task-8"],
-  },
-};
+import { useKanbanData } from "./hooks/use-kanban-data";
 
 export default function App() {
-  const [columnsOrder, setColumnsOrder] = useState(initialColumnOrder);
-  const [data, setData] = useState(initialColData);
-
-  function handleDragDrop(results: DropResult) {
-    const { source, destination, type } = results;
-
-    if (!destination) return;
-
-    // If the item was dropped in the exact same position, do nothing.
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    )
-      return;
-
-    const sourceIndex = source.index;
-    const destinationIndex = destination.index;
-
-    // Handle COLUMN Dragging (reordering the columns)
-    if (type === "COLUMN") {
-      const reorderedColumns = [...columnsOrder];
-      const [removedColId] = reorderedColumns.splice(sourceIndex, 1);
-      reorderedColumns.splice(destinationIndex, 0, removedColId);
-
-      setColumnsOrder(reorderedColumns);
-      return;
-    } else {
-      // Handle TASK Dragging
-      const sourceColId = source.droppableId;
-      const destinationColumnId = destination.droppableId;
-
-      // 1. Moving within the SAME column
-      if (sourceColId === destinationColumnId) {
-        const newItemsIdCollection = [...data[sourceColId].tasksOrder];
-        const [deletedItemId] = newItemsIdCollection.splice(sourceIndex, 1);
-        newItemsIdCollection.splice(destinationIndex, 0, deletedItemId);
-
-        // Immutability: Create a NEW column object (Level 2)
-        const newColumn = {
-          ...data[sourceColId],
-          tasksOrder: newItemsIdCollection,
-        };
-
-        // Immutability: Create a NEW data object (Level 1)
-        const newData = {
-          ...data,
-          [sourceColId]: newColumn,
-        };
-
-        setData(newData);
-      } else {
-        // 2. Moving between DIFFERENT columns
-        const newSourceItemsIdCollection = [...data[sourceColId].tasksOrder];
-        const newDestItemsIdCollection = [
-          ...data[destinationColumnId].tasksOrder,
-        ];
-
-        // Remove from source array
-        const [deletedItemId] = newSourceItemsIdCollection.splice(
-          sourceIndex,
-          1
-        );
-
-        // Insert into destination array
-        newDestItemsIdCollection.splice(destinationIndex, 0, deletedItemId);
-
-        // Immutability: Create NEW column objects for both source and destination (Level 2)
-        const newSourceCol = {
-          ...data[sourceColId],
-          tasksOrder: newSourceItemsIdCollection,
-        };
-        const newDestCol = {
-          ...data[destinationColumnId],
-          tasksOrder: newDestItemsIdCollection,
-        };
-
-        // Immutability: Create a NEW data object (Level 1)
-        const newData = {
-          ...data,
-          [sourceColId]: newSourceCol,
-          [destinationColumnId]: newDestCol,
-        };
-
-        setData(newData);
-      }
-    }
-  }
+  // Use the custom hook to get all state and handlers, including handleDeleteTask
+  const {
+    columnsOrder,
+    data,
+    allTasks,
+    handleDragDrop,
+    handleAddTask,
+    handleDeleteTask,
+  } = useKanbanData();
 
   return (
     <DragDropContext onDragEnd={handleDragDrop}>
-      <Droppable droppableId="ROOT" type="COLUMN" direction="horizontal">
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className="flex overflow-x-auto justify-center min-h-[70vh] max-w-full" // Added gap to manage spacing
+      <div className="flex flex-col items-center p-4 bg-gray-900 min-h-screen">
+        <h1 className="text-3xl font-bold mb-6 text-white font-inter">
+          Kanban Board (Local Storage)
+        </h1>
+
+        {/* New Task Input & Button */}
+        <div className="mb-8 flex space-x-3 w-full max-w-4xl">
+          <input
+            id="newTaskInput"
+            type="text"
+            placeholder="Enter new task title..."
+            className="flex-grow p-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-500 shadow-inner"
+          />
+          <button
+            onClick={() => {
+              const input = document.getElementById(
+                "newTaskInput"
+              ) as HTMLInputElement;
+              handleAddTask(input.value);
+              input.value = ""; // Clear input after adding
+            }}
+            className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50"
           >
-            {columnsOrder.map((colId, index) => {
-              const columnData = data[colId];
-              const columnTasks = columnData.tasksOrder.map(
-                (taskId) => allTasks[taskId]
-              );
+            Add Task
+          </button>
+        </div>
+        {/* End New Task Input & Button */}
 
-              return (
-                <Draggable
-                  draggableId={columnData.id}
-                  key={columnData.id}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="flex flex-col p-3 mx-2 bg-gray-700 rounded-md min-w-[320px] max-w-[320px] shadow-lg"
-                      style={{
-                        ...provided.draggableProps.style,
-                        position: "relative",
-                      }}
-                    >
+        <Droppable droppableId="ROOT" type="COLUMN" direction="horizontal">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="flex overflow-x-auto justify-start items-start w-full max-w-full lg:max-w-7xl pb-4"
+              style={{ minHeight: "calc(100vh - 180px)" }}
+            >
+              {columnsOrder.map((colId, index) => {
+                const columnData = data[colId];
+                // Map the task IDs in the column to the actual task objects
+                const columnTasks = columnData.tasksOrder
+                  .map((taskId) => allTasks[taskId])
+                  .filter((task) => task !== undefined); // Filter out tasks that might not exist in allTasks
+
+                return (
+                  <Draggable
+                    draggableId={columnData.id}
+                    key={columnData.id}
+                    index={index}
+                  >
+                    {(provided) => (
                       <div
-                        {...provided.dragHandleProps}
-                        className="bg-gray-600 hover:bg-gray-500 p-2 rounded-t-md cursor-move"
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        // REMOVED: transition duration-300, hover:shadow-indigo-500/30
+                        className="flex flex-col p-3 mx-2 bg-gray-800 rounded-xl min-w-[300px] max-w-[300px] shadow-2xl"
+                        style={{
+                          ...provided.draggableProps.style,
+                          position: "relative",
+                        }}
                       >
-                        <p className="text-xl font-semibold text-white">
-                          {columnData.title}
-                        </p>
-                      </div>
+                        <div
+                          {...provided.dragHandleProps}
+                          // REMOVED: hover:bg-gray-600, transition duration-150
+                          className="bg-gray-700 p-3 rounded-t-xl cursor-grab active:cursor-grabbing flex justify-between items-center"
+                        >
+                          <p className="text-lg font-bold text-white uppercase tracking-wider">
+                            {columnData.title}
+                          </p>
+                          <span className="text-sm font-medium text-indigo-400 bg-indigo-900/50 px-2 py-0.5 rounded-full">
+                            {columnTasks.length}
+                          </span>
+                        </div>
 
-                      <Column id={columnData.id} columnTasks={columnTasks} />
-                    </div>
-                  )}
-                </Draggable>
-              );
-            })}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
+                        {/* Pass the column ID and the delete handler */}
+                        <Column
+                          id={columnData.id}
+                          columnTasks={columnTasks}
+                          onDeleteTask={handleDeleteTask} // New prop
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </div>
     </DragDropContext>
   );
 }
