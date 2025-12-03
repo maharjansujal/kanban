@@ -3,7 +3,6 @@ import Column from "./components/column";
 import { useKanbanData } from "./hooks/use-kanban-data";
 
 export default function App() {
-  // Pull handleEditTask from the hook return
   const {
     columnsOrder,
     data,
@@ -69,7 +68,6 @@ export default function App() {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        // REMOVED: transition duration-300, hover:shadow-indigo-500/30
                         className="flex flex-col p-3 mx-2 bg-gray-800 rounded-xl min-w-[300px] max-w-[300px] shadow-2xl"
                         style={{
                           ...provided.draggableProps.style,
@@ -78,7 +76,6 @@ export default function App() {
                       >
                         <div
                           {...provided.dragHandleProps}
-                          // REMOVED: hover:bg-gray-600, transition duration-150
                           className="bg-gray-700 p-3 rounded-t-xl cursor-grab active:cursor-grabbing flex justify-between items-center"
                         >
                           <p className="text-lg font-bold text-white uppercase tracking-wider">

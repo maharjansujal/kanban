@@ -12,8 +12,7 @@ interface SavedState {
   allTasksState: AllTasksMap;
 }
 
-// --- Static Initial Data for First Run (Assumed from previous context) ---
-// Note: If your initial data structure is different, please adjust this section.
+// --- Static Initial Data for First Run ---
 
 const initialAllTasks: AllTasksMap = {
   "task-1": { id: "task-1", title: "Review UI/UX sketches" },
@@ -46,7 +45,7 @@ const initialColData: ColumnsMap = {
   },
 };
 
-// --- Local Storage Utilities (Existing) ---
+// --- Local Storage Utilities  ---
 
 function loadStateFromLocalStorage(): SavedState | undefined {
   try {
@@ -78,7 +77,7 @@ function saveStateToLocalStorage(
   }
 }
 
-// --- Task Utilities (Existing) ---
+// --- Task Utilities ---
 
 function createNewTask(title: string): Task {
   return {
@@ -106,9 +105,9 @@ export function useKanbanData() {
     saveStateToLocalStorage(columnsOrder, data, allTasksState);
   }, [columnsOrder, data, allTasksState]);
 
-  // --- Drag and Drop Handler (Omitted for brevity, but exists) ---
+  // --- Drag and Drop Handler  ---
   function handleDragDrop(results: DropResult) {
-    // ... existing handleDragDrop logic ...
+    // ... handleDragDrop logic ...
      const { source, destination, type } = results;
 
     if (!destination) return;
