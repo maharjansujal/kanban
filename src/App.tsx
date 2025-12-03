@@ -3,7 +3,7 @@ import Column from "./components/column";
 import { useKanbanData } from "./hooks/use-kanban-data";
 
 export default function App() {
-  // Use the custom hook to get all state and handlers, including handleDeleteTask
+  // Pull handleEditTask from the hook return
   const {
     columnsOrder,
     data,
@@ -11,6 +11,7 @@ export default function App() {
     handleDragDrop,
     handleAddTask,
     handleDeleteTask,
+    handleEditTask,
   } = useKanbanData();
 
   return (
@@ -88,11 +89,12 @@ export default function App() {
                           </span>
                         </div>
 
-                        {/* Pass the column ID and the delete handler */}
+                        {/* Pass the column ID, delete handler, AND the new edit handler */}
                         <Column
                           id={columnData.id}
                           columnTasks={columnTasks}
-                          onDeleteTask={handleDeleteTask} // New prop
+                          onDeleteTask={handleDeleteTask}
+                          onEditTask={handleEditTask} // New prop passed down
                         />
                       </div>
                     )}

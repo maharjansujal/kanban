@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { DropResult } from "react-beautiful-dnd";
-// Import necessary types from your index.d.ts file
-import type { AllTasksMap, ColumnsMap, Task } from "../types/index"; 
+import type { AllTasksMap, ColumnsMap, Task } from "../types/index";
 
 // Define the key for local storage
 const LOCAL_STORAGE_KEY = "kanbanBoardData";
@@ -13,7 +12,8 @@ interface SavedState {
   allTasksState: AllTasksMap;
 }
 
-// --- Static Initial Data for First Run ---
+// --- Static Initial Data for First Run (Assumed from previous context) ---
+// Note: If your initial data structure is different, please adjust this section.
 
 const initialAllTasks: AllTasksMap = {
   "task-1": { id: "task-1", title: "Review UI/UX sketches" },
@@ -46,16 +46,14 @@ const initialColData: ColumnsMap = {
   },
 };
 
-// --- Local Storage Utilities ---
+// --- Local Storage Utilities (Existing) ---
 
-// Explicitly type the return value
 function loadStateFromLocalStorage(): SavedState | undefined {
   try {
     const serializedState = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (serializedState === null) {
       return undefined;
     }
-    // Return parsed JSON as the SavedState type
     return JSON.parse(serializedState) as SavedState;
   } catch (error) {
     console.error("Error loading state from local storage:", error);
@@ -80,7 +78,7 @@ function saveStateToLocalStorage(
   }
 }
 
-// --- Task Utilities ---
+// --- Task Utilities (Existing) ---
 
 function createNewTask(title: string): Task {
   return {
@@ -94,7 +92,6 @@ function createNewTask(title: string): Task {
 export function useKanbanData() {
   const savedState = loadStateFromLocalStorage();
 
-  // 1. Apply explicit types to useState calls
   const [columnsOrder, setColumnsOrder] = useState<string[]>(
     savedState ? savedState.columnsOrder : initialColumnOrder
   );
@@ -105,14 +102,14 @@ export function useKanbanData() {
     savedState ? savedState.allTasksState : initialAllTasks
   );
 
-  // 2. State Synchronization (Save on change)
   useEffect(() => {
     saveStateToLocalStorage(columnsOrder, data, allTasksState);
   }, [columnsOrder, data, allTasksState]);
 
-  // 3. Drag and Drop Handler (Existing logic, ensures state changes are immutable)
+  // --- Drag and Drop Handler (Omitted for brevity, but exists) ---
   function handleDragDrop(results: DropResult) {
-    const { source, destination, type } = results;
+    // ... existing handleDragDrop logic ...
+     const { source, destination, type } = results;
 
     if (!destination) return;
 
@@ -184,20 +181,20 @@ export function useKanbanData() {
     }
   }
 
-  // 4. Task Management Functions (handleAddTask & handleDeleteTask)
+
+  // --- Task Management Functions ---
+  
   function handleAddTask(taskTitle: string) {
     if (!taskTitle.trim()) return;
 
     const newTask = createNewTask(taskTitle);
     const sourceColId = "column-1"; // Always add to 'To Do'
 
-    // Update the stateful allTasks map
     const newAllTasksState: AllTasksMap = {
       ...allTasksState,
       [newTask.id]: newTask,
     };
 
-    // Update the column data (add to the start of 'To Do' tasksOrder)
     const newItemsIdCollection = [
       newTask.id,
       ...data[sourceColId].tasksOrder,
@@ -213,7 +210,6 @@ export function useKanbanData() {
       [sourceColId]: newColumn,
     };
 
-    // Set both states, triggering the useEffect save
     setAllTasksState(newAllTasksState);
     setData(newData);
   }
@@ -234,7 +230,6 @@ export function useKanbanData() {
     };
 
     // 2. Remove the task from the allTasksState map
-    // Destructuring assignment to omit the property
     const { [taskId]: deletedTask, ...newAllTasksState } = allTasksState;
 
     // 3. Update state
@@ -242,13 +237,41 @@ export function useKanbanData() {
     setData(newData);
   }
 
-  // 5. Return the necessary state and functions, including the new delete function
+  /**
+   * Updates the title of an existing task in the allTasksState map.
+   * @param taskId The ID of the task to edit.
+   * @param newTitle The new title for the task.
+   */
+  function handleEditTask(taskId: string, newTitle: string) {
+    if (!newTitle.trim()) return;
+
+    const taskToUpdate = allTasksState[taskId];
+    if (!taskToUpdate) return;
+
+    // Immutably update the single task title
+    const updatedTask: Task = {
+      ...taskToUpdate,
+      title: newTitle.trim(),
+    };
+
+    // Immutably update the allTasksState map
+    const newAllTasksState: AllTasksMap = {
+      ...allTasksState,
+      [taskId]: updatedTask,
+    };
+
+    setAllTasksState(newAllTasksState);
+    // The useEffect hook automatically saves the state to Local Storage
+  }
+
+  // 5. Return the necessary state and functions, including the new edit function
   return {
     columnsOrder,
     data,
     allTasks: allTasksState, 
     handleDragDrop,
     handleAddTask,
-    handleDeleteTask, // New function returned
+    handleDeleteTask,
+    handleEditTask, // New function returned
   };
 }
