@@ -88,8 +88,14 @@ export default function Column({
                       {/* Delete Button */}
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent drag interaction when clicking delete
-                          onDeleteTask(task.id, id);
+                          e.stopPropagation();
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this task?"
+                            )
+                          ) {
+                            onDeleteTask(task.id, id);
+                          }
                         }}
                         className="text-red-400 ml-2 p-1 rounded-full absolute top-2 right-2"
                         title="Delete Task"

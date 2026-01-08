@@ -1,6 +1,7 @@
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import Column from "./components/column";
 import { useKanbanData } from "./hooks/use-kanban-data";
+import { useState } from "react";
 
 export default function App() {
   const {
@@ -12,7 +13,13 @@ export default function App() {
     handleDeleteTask,
     handleEditTask,
   } = useKanbanData();
-
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const onAddClick = () => {
+    if (newTaskTitle.trim()) {
+      handleAddTask(newTaskTitle);
+      setNewTaskTitle(""); // Clear the input via state
+    }
+  };
   return (
     <DragDropContext onDragEnd={handleDragDrop}>
       <div className="flex flex-col items-center p-4 bg-gray-900 min-h-screen">
@@ -23,19 +30,15 @@ export default function App() {
         {/* New Task Input & Button */}
         <div className="mb-8 flex space-x-3 w-full max-w-4xl">
           <input
-            id="newTaskInput"
             type="text"
             placeholder="Enter new task title..."
+            value={newTaskTitle} // Controlled value
+            onChange={(e) => setNewTaskTitle(e.target.value)} // Update state on change
+            onKeyDown={(e) => e.key === "Enter" && onAddClick()} // Optional: Add on Enter key
             className="flex-grow p-3 rounded-xl border border-gray-700 bg-gray-800 text-white focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-500 shadow-inner"
           />
           <button
-            onClick={() => {
-              const input = document.getElementById(
-                "newTaskInput"
-              ) as HTMLInputElement;
-              handleAddTask(input.value);
-              input.value = ""; // Clear input after adding
-            }}
+            onClick={onAddClick} // Call the helper
             className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50"
           >
             Add Task
