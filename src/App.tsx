@@ -71,7 +71,6 @@ export default function App() {
                         className="flex flex-col p-3 mx-2 bg-gray-800 rounded-xl min-w-[300px] max-w-[300px] shadow-2xl"
                         style={{
                           ...provided.draggableProps.style,
-                          position: "relative",
                         }}
                       >
                         <div
